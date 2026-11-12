@@ -1,0 +1,45 @@
+name: Windows Server 2022 RDP Setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: windows-2022
+    timeout-minutes: 360
+
+    steps:
+      - name: System Information
+        shell: powershell
+        run: |
+          Get-ComputerInfo |
+          Select-Object WindowsProductName,
+          WindowsVersion, OsArchitecture
+
+      - name: Enable Remote Desktop
+        shell: powershell
+        run: |
+          Set-ItemProperty `
+            -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' `
+            -Name fDenyTSConnections `
+            -Value 0
+
+      - name: Check RDP Service
+        shell: powershell
+        run: |
+          Get-Service TermService
+
+      - name: Check Firewall
+        shell: powershell
+        run: |
+          Get-NetFirewallRule |
+          Where-Object DisplayGroup -Like 'Remote Desktop' |
+          Select-Object DisplayName, Enabled
+
+      - name: Network Information
+        shell: powershell
+        run: |
+          Get-NetIPConfiguration
+
+      - name: Finish
+        run: echo "Windows Server setup check completed"
